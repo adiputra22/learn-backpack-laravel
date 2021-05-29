@@ -39,8 +39,20 @@ class TagCrudController extends CrudController
      */
     protected function setupListOperation()
     {
+        CRUD::column('id'); // showing id
         CRUD::column('name');
         CRUD::column('slug');
+
+        // add new column
+        CRUD::column('created_at');
+        CRUD::column('updated_at');
+
+        // custom query: 
+        // https://backpackforlaravel.com/docs/4.1/crud-operation-list-entries#custom-query-1
+        $this->crud->orderBy('updated_at', 'desc');
+
+        // export buttons
+        $this->crud->enableExportButtons();
 
         /**
          * Columns can be defined using the fluent syntax or array syntax:
