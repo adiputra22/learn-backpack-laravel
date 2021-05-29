@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Requests\ArticleRequest;
 use App\Models\Article;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 
 /**
- * Class ArticleCrudController
+ * Class ArticleCommentCrudController
  * @package App\Http\Controllers\Admin
  * @property-read \Backpack\CRUD\app\Library\CrudPanel\CrudPanel $crud
  */
-class ArticleCrudController extends CrudController
+class ArticleCommentCrudController extends CrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+
+    public $articleId = null;
+    public $item = null;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -27,9 +29,12 @@ class ArticleCrudController extends CrudController
      */
     public function setup()
     {
-        CRUD::setModel(\App\Models\Article::class);
-        CRUD::setRoute(config('backpack.base.route_prefix') . '/article');
-        CRUD::setEntityNameStrings('article', 'articles');
+        $this->articleId = $this->crud->getRequest()->route('articleId');
+        $this->item = Article::findOrFail($this->articleId);
+        
+        CRUD::setModel(\App\Models\Comment::class);
+        CRUD::setRoute(config('backpack.base.route_prefix') . '/article/'.$this->articleId.'/articlecomment');
+        CRUD::setEntityNameStrings('articlecomment', 'Comment for article (' . $this->item->title . ')');
     }
 
     /**
@@ -40,23 +45,12 @@ class ArticleCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::column('category_id');
-        CRUD::column('title');
-        CRUD::column('slug');
-        CRUD::column('status')->wrapper([
-            'element' => 'span',
-            'class' => function ($crud, $column, $entry, $related_key) {
-                if ($column['text'] == Article::STATUS_PUBLISHED) {
-                    return 'badge badge-success';
-                }
+        CRUD::column('article_id');
+        CRUD::column('content');
+        CRUD::column('status');
 
-                return 'badge badge-default';
-            },
-        ]);
-        CRUD::column('date');
-        CRUD::column('featured')->type('check');
-
-        $this->crud->addButtonFromView('line', 'comment', 'comment', 'end');
+        $this->crud->addClause('where', 'article_id', '=', $this->articleId);
+        $this->crud->orderBy('updated_at', 'desc');
 
         /**
          * Columns can be defined using the fluent syntax or array syntax:
@@ -73,16 +67,9 @@ class ArticleCrudController extends CrudController
      */
     protected function setupCreateOperation()
     {
-        CRUD::setValidation(ArticleRequest::class);
-
-        CRUD::field('category_id');
-        CRUD::field('title');
-        CRUD::field('slug');
+        CRUD::field('article_id')->type('hidden')->value($this->articleId);
         CRUD::field('content');
-        CRUD::field('image');
         CRUD::field('status')->type('enum');
-        CRUD::field('date');
-        CRUD::field('featured');
 
         /**
          * Fields can be defined using the fluent syntax or array syntax:

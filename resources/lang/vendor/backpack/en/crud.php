@@ -177,4 +177,5 @@ return [
 
     // returned when no translations found in select inputs
     'empty_translations' => '(empty)',
+    'comment' => 'Comment',
 ];
