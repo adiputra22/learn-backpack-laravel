@@ -2,18 +2,26 @@ created:
     - database/factories/CategoryFactory.php
     - database/factories/ArticleFactory.php
     - database/factories/TagFactory.php
-    - database/migrations/2021_05_27_002120_create_categories_table.php
-    - database/migrations/2021_05_27_002121_create_articles_table.php
-    - database/migrations/2021_05_27_002122_create_tags_table.php
-    - database/migrations/2021_05_27_002123_create_article_tag_table.php
+    - database/factories/CommentFactory.php
+    - database/migrations/2021_05_29_150721_create_categories_table.php
+    - database/migrations/2021_05_29_150722_create_articles_table.php
+    - database/migrations/2021_05_29_150723_create_tags_table.php
+    - database/migrations/2021_05_29_150724_create_comments_table.php
+    - database/migrations/2021_05_29_150725_create_article_tag_table.php
     - app/Models/Category.php
     - app/Models/Article.php
     - app/Models/Tag.php
+    - app/Models/Comment.php
     - database/seeders/ArticleSeeder.php
     - database/seeders/CategorySeeder.php
     - database/seeders/TagSeeder.php
+    - database/seeders/CommentSeeder.php
 models:
+    Models\Article: { category_id: 'biginteger unsigned', title: string, slug: 'string default:', content: text, image: 'string nullable', status: 'enum:PUBLISHED,DRAFT', date: date, featured: 'boolean default:0' }
+    Models\Category: { parent_id: 'biginteger unsigned nullable', lft: 'integer unsigned nullable', rgt: 'integer unsigned nullable', depth: 'integer unsigned nullable', name: string, slug: string }
+    Models\Tag: { name: string, slug: string }
     Models\User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string:100 nullable' }
     Category: { parent_id: 'id foreign:categories nullable', lft: 'integer unsigned nullable', rgt: 'integer unsigned nullable', depth: 'integer unsigned nullable', name: string, slug: 'string unique', timestamps: timestamps, softdeletes: softDeletes, relationships: { hasMany: Article } }
-    Article: { category_id: 'id foreign', title: string, slug: 'string unique default:''''', content: text, image: 'string nullable', status: 'enum:PUBLISHED,DRAFT', date: date, featured: 'boolean default:0', timestamps: timestamps, softdeletes: softDeletes, relationships: { belongsToMany: Tag } }
+    Article: { category_id: 'id foreign', title: string, slug: 'string unique default:''''', content: text, image: 'string nullable', status: 'enum:PUBLISHED,DRAFT', date: date, featured: 'boolean default:0', timestamps: timestamps, softdeletes: softDeletes, relationships: { belongsToMany: Tag, hasMany: Comment } }
     Tag: { name: string, slug: 'string unique', timestamps: timestamps, softdeletes: softDeletes, relationships: { belongsToMany: Article } }
+    Comment: { user_id: 'integer unsigned nullable', article_id: 'id foreign', content: text, status: 'enum:PENDING,APPROVED default:''PENDING''', timestamps: timestamps, softdeletes: softDeletes }
