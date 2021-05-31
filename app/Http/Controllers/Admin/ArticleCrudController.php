@@ -56,7 +56,8 @@ class ArticleCrudController extends CrudController
 
         CRUD::column('featured')->type('boolean');
         
-        
+
+        $this->crud->enableBulkActions();
 
         $this->crud->addButtonFromView('line', 'comment', 'comment', 'end');
 
