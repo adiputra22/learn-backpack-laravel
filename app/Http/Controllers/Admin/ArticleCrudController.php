@@ -53,8 +53,10 @@ class ArticleCrudController extends CrudController
                 return 'badge badge-default';
             },
         ]);
-        CRUD::column('date');
-        CRUD::column('featured')->type('check');
+
+        CRUD::column('featured')->type('boolean');
+        
+        
 
         $this->crud->addButtonFromView('line', 'comment', 'comment', 'end');
 
