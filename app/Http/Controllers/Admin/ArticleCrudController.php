@@ -56,6 +56,9 @@ class ArticleCrudController extends CrudController
 
         CRUD::column('featured')->type('boolean');
         
+        CRUD::column('date')->type('closure')->function(function($entry) {
+            return 'Created on '.$entry->created_at;
+        });
 
         $this->crud->enableBulkActions();
 
