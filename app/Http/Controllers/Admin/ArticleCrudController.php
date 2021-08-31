@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\ArticleRequest;
 use App\Models\Article;
+use App\Models\Category;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 
@@ -19,6 +20,7 @@ class ArticleCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+    use \Backpack\CRUD\app\Http\Controllers\Operations\FetchOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -60,9 +62,56 @@ class ArticleCrudController extends CrudController
             return 'Created on '.$entry->created_at;
         });
 
+        
         $this->crud->enableBulkActions();
-
+        
         $this->crud->addButtonFromView('line', 'comment', 'comment', 'end');
+        
+        // simple filter
+        $this->crud->addFilter([
+            'type'  => 'simple',
+            'name'  => 'featured',
+            'label' => 'Featured'
+        ], 
+        false, 
+        function() { // if the filter is active
+            $this->crud->addClause('where', 'featured', '1'); // apply the "active" eloquent scope 
+        } );
+
+        $this->crud->addFilter([
+            'type' => 'simple',
+            'name' => 'status_published',
+            'label' => 'Status Published'
+        ], false, function() {
+            $this->crud->addClause('where', 'status', 1);
+        });
+
+        $this->crud->addFilter([
+            'name'  => 'status',
+            'type'  => 'select2',
+            'label' => 'Category'
+        ], function () {
+            $categories = Category::all();
+            return $categories->pluck('name', 'id')->toArray();
+        }, function ($value) { // if the filter is active
+            $this->crud->addClause('where', 'category_id', $value);
+        });
+
+        $this->crud->addFilter(
+            [
+                'name'        => 'category_id',
+                'type'        => 'select2_ajax',
+                'label'       => 'Category',
+                'placeholder' => 'Pick a category',
+                'method' => 'POST', // mandatory change
+                'select_attribute' => 'name', // the attribute that will be shown to the user by default 'name'
+                'select_key' => 'id' // by default is ID, change it if your model uses some other key
+            ],
+            backpack_url('article/fetch/category'), // the fetch route on the ProductCrudController 
+            function($value) { // if the filter is active
+                $this->crud->addClause('where', 'category_id', $value);
+            }
+        );
 
         /**
          * Columns can be defined using the fluent syntax or array syntax:
@@ -106,5 +155,14 @@ class ArticleCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
+    }
+
+    protected function fetchCategory()
+    {
+        return $this->fetch([
+            'model' => \App\Models\Category::class, // required
+            'searchable_attributes' => ['name'],
+            'paginate' => 10, // items to show per page
+        ]);
     }
 }
